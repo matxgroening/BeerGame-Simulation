@@ -5,4 +5,57 @@ import matplotlib as m
 import numpy as n
 
 # import seperate .py into main
-import functions
+import functions as f
+
+
+
+# CONSTANTS
+# starting conditions
+s_amt_transp = 4
+s_amt_wip = 4
+s_amt_stock = 12
+# speculated inventory variables
+s_cycle_stock = 8
+s_safety_stock = 8
+
+
+# start simulation, define starting vector and start weekly cycle
+def sim(s_amt_transp, s_amt_wip, s_amt_stock):
+    # define starting vector
+    v_brew = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4]
+    v_bottl = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4]
+    v_wholes = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4]
+    v_bar = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4]
+
+    # define starting matrix
+    m_brew = []
+    m_bottl = []
+    m_wholes = []
+    m_bar = []
+
+    # define list with every vector
+    v_list = (v_brew, v_bottl, v_wholes, v_bar)
+
+
+    # loop for 30 weeks (TEST for 2)
+    for i in range(1, 6):
+        
+        # loop for every company
+        for c in v_list:
+            # move products from wip into stock
+            c = f.move_to_stock(c)
+
+            # move products from transport into wip
+            c = f.move_to_wip(c)
+
+            # change var:week to current
+            c = f.change_week(c, i)
+
+        # save vector in matrix
+        m_brew = f.save_into_matrix(v_list[0], m_brew)
+        m_bottl = f.save_into_matrix(v_list[1], m_bottl)
+        m_wholes = f.save_into_matrix(v_list[2], m_wholes)
+        m_bar = f.save_into_matrix(v_list[3], m_bar)
+
+
+sim(s_amt_transp, s_amt_wip, s_amt_stock)
