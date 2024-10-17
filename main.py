@@ -43,13 +43,13 @@ def sim(s_amt_transp, s_amt_wip, s_amt_stock):
         # loop for every company
         for c in v_list:
             # move products from wip into stock
-            c = f.move_to_stock(c)
+            f.move_to_stock(c)
 
             # move products from transport into wip
-            c = f.move_to_wip(c)
+            f.move_to_wip(c)
 
             # change var:week to current
-            c = f.change_week(c, i)
+            f.change_week(c, i)
 
         # save vector in matrix
         m_brew = f.save_into_matrix(v_list[0], m_brew)
