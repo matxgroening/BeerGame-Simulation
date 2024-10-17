@@ -19,6 +19,8 @@ s_cycle_stock = 8
 s_safety_stock = 8
 
 
+# SIMULATION
+
 # start simulation, define starting vector and start weekly cycle
 def sim(s_amt_transp, s_amt_wip, s_amt_stock):
     # define starting vector
@@ -36,6 +38,9 @@ def sim(s_amt_transp, s_amt_wip, s_amt_stock):
     # define list with every vector
     v_list = (v_brew, v_bottl, v_wholes, v_bar)
 
+    # define list with every matrix
+    m_list = (m_brew, m_bottl, m_wholes, m_bar)
+
 
     # loop for 30 weeks (TEST for 2)
     for i in range(1, 6):
@@ -50,12 +55,15 @@ def sim(s_amt_transp, s_amt_wip, s_amt_stock):
 
             # change var:week to current
             f.change_week(c, i)
+            print(c)
 
-        # save vector in matrix
-        m_brew = f.save_into_matrix(v_list[0], m_brew)
-        m_bottl = f.save_into_matrix(v_list[1], m_bottl)
-        m_wholes = f.save_into_matrix(v_list[2], m_wholes)
-        m_bar = f.save_into_matrix(v_list[3], m_bar)
+            # save vector in matrix
+            for m in m_list:
+                f.save_into_matrix(m, c)
+        
 
+
+
+#RUN
 
 sim(s_amt_transp, s_amt_wip, s_amt_stock)

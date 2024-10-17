@@ -17,7 +17,7 @@ def create_new(week, order_suppl, amt_transp, amt_wip, amt_stock, cycle_stock, s
 
 # save the vector data into matrix for KPI
 def save_into_matrix(matrix, vector):
-    matrix.append(vector)
+    matrix.append(vector.copy())
     return matrix
 
 
