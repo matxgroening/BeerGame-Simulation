@@ -40,10 +40,10 @@ def sim():
     # definition of vectors for weekly data of companys
     # (week, order_suppl, amt_transp, amt_wip, amt_stock, 
     # cycle_stock, safety_stock, order_cust, blog_cust, demand_cust, delivered_cust]
-    v_brew = [0, 2, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
+    v_brew = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
     v_bottl = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
-    v_wholes = [0, 6, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
-    v_bar = [0, 8, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 0]
+    v_wholes = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
+    v_bar = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 0]
 
     # define starting matrix
     m_brew = []
