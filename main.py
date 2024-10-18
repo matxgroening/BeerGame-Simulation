@@ -4,6 +4,8 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import truncnorm
+import pandas as pd
 
 # import seperate .py into main
 import functions as f
@@ -15,7 +17,7 @@ import functions as f
 variance = 10
 std_dev = np.sqrt(variance)
 avg_demand =10
-sim_time = 30
+sim_time = 100
 cost_stock = 0.5
 cost_blog = 1
 np.random.seed(42)
@@ -62,9 +64,8 @@ def sim():
         # calculation of demand with normal distribution
         demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
         v_list[3][7] = demand_ak
-        print(demand_ak)
+        print(f"AK Demand: {demand_ak}")
 
-        
         # loop for every company
         for c in v_list:
             # move products from wip into stock
@@ -73,30 +74,32 @@ def sim():
             # move products from transport into wip
             f.move_to_wip(c)
 
-            # calculate demand and backlog
+            # calculate demand
             f.calc_demand_cust(c)
-            f.calc_blog(c)
 
-            # calculate delivery amount an move out of 
+            # calculate delivery amount
             del_amt = f.calc_delivery(c)
 
             # dispatch order to customer
             f.move_to_transp(c, v_list, del_amt)
 
-            # pass order_suppl of company next in line into order_cust of current company
-            f.pass_order(c, v_list)
-
-            # change var:week to current
-            f.change_week(c, i)
+            # change order amout from supplier
+            f.calc_order_suppl_v1(c)
 
             # save vector in matrix
             f.save_into_matrix(m_list, c, v_list)
 
-            print(f"Week {i}: Order Cust: {c[7]}, Backlog: {c[8]}, Demand: {c[9]}, Stock: {c[4]}")
+            # change var:week to current
+            f.change_week(c, i)
+        
+        print(f"Bar: {v_bar}")
+        print(f"WhS: {v_wholes}")
 
-        print(v_bar)
+        for c in v_list:
+            # pass order_suppl of company previous in line into order_cust of current company
+            f.pass_order(c, v_list)
     
-    print(m_bar)
+    f.print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar)
     return
         
 
