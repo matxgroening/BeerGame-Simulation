@@ -17,7 +17,7 @@ import functions as f
 variance = 10
 std_dev = np.sqrt(variance)
 avg_demand =10
-sim_time = 100
+sim_time = 30
 cost_stock = 0.5
 cost_blog = 1
 np.random.seed(42)
@@ -61,10 +61,9 @@ def sim():
     # loop for sim_time
     for i in range(1, sim_time+1):
         
-        # calculation of demand with normal distribution
+        # calculation of demand with normal distribution ANS ENDE
         demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
         v_list[3][7] = demand_ak
-        print(f"AK Demand: {demand_ak}")
 
         # loop for every company
         for c in v_list:
@@ -78,7 +77,7 @@ def sim():
             f.calc_demand_cust(c)
 
             # calculate delivery amount
-            del_amt = f.calc_delivery(c)
+            del_amt = 5 #f.calc_delivery(c)
 
             # dispatch order to customer
             f.move_to_transp(c, v_list, del_amt)
