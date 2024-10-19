@@ -44,13 +44,13 @@ def move_to_wip(vector):
 
 # checks if brewery: order will be next in transport to brewery, 
 # else: moves order_suppl of previous company in line into order_cust of current company
-def pass_order(vector, v_list):
+def pass_order(vector, v_list, v_brew_prep):
     idx = v_list.index(vector)
     if idx == 0:
-        vector[3] = vector[2]
+        v_brew_prep = vector[1]
     else:
         v_list[idx-1][7] = vector[1]
-    return vector
+    return v_brew_prep
 
 
 # calculate demand of customer (order current week + backlog)
@@ -84,16 +84,20 @@ def calc_delivery(vector):
 
 
 # dispatch products to transport in direction of customer
-def move_to_transp(vector, v_list, del_amt):
+def move_to_transp(vector, v_list, del_amt, v_brew_prep):
     idx = v_list.index(vector)
     # if bar add to delivered_cust
     if idx == 3:
         vector[10] += del_amt
+    elif idx == 0:
+        vector[2] = v_brew_prep
+        vector[10] += del_amt
+        v_list[idx + 1][2] = del_amt
     # else do the same send the amount to amt_transp to next in line
     else:
         vector[10] += del_amt
         v_list[idx + 1][2] = del_amt
-    return vector
+    return v_brew_prep
 
 
 # set order amount 
@@ -103,11 +107,10 @@ def calc_order_suppl_v1(vector):
 
 # v2 order the amount to achieve 20 in stock
 def calc_order_suppl_v2(vector):
-    if vector[4] < 20:
-        vector[1] = 20 - vector[4]
+    if vector[4] < 15:
+        vector[1] = 15 - vector[4]
     else:
         vector[1] = 0
-
 
 
 # change var:week to current
@@ -144,7 +147,167 @@ def print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar):
     print("\nBar Table:")
     print(df_bar.to_string(index=False))
 
+
+
+
 # Example of how you might call this function after the simulation
 # Assuming m_brew, m_bottl, m_wholes, m_bar have been updated in your simulation
 # Call the function like this:
 # print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar)
+
+
+# FUNCTION TO PLOT BACKLOG AND STOCK
+
+def plot_backlog_and_stock(m_brew, m_bottl, m_wholes, m_bar):
+    # Define the figure and axes
+    fig, axs = plt.subplots(3, 1, figsize=(10, 8))
+
+    # Extract week, backlog, and stock columns for each matrix
+    weeks = [row[0] for row in m_brew]
+    
+    # Backlogs
+    backlog_brew = [row[8] for row in m_brew]
+    backlog_bottl = [row[8] for row in m_bottl]
+    backlog_wholes = [row[8] for row in m_wholes]
+    backlog_bar = [row[8] for row in m_bar]
+
+    # Stock
+    stock_brew = [row[4] for row in m_brew]
+    stock_bottl = [row[4] for row in m_bottl]
+    stock_wholes = [row[4] for row in m_wholes]
+    stock_bar = [row[4] for row in m_bar]
+
+    # Order of station
+    order_brew = [row[1] for row in m_brew]
+    order_bottl = [row[1] for row in m_bottl]
+    order_wholes = [row[1] for row in m_wholes]
+    order_bar = [row[1] for row in m_bar]
+
+    # Plot Backlog
+    axs[0].plot(weeks, backlog_brew, label="Brewery", color='blue', marker='o')
+    axs[0].plot(weeks, backlog_bottl, label="Bottler", color='green', marker='s')
+    axs[0].plot(weeks, backlog_wholes, label="Wholesaler", color='orange', marker='^')
+    axs[0].plot(weeks, backlog_bar, label="Bar", color='red', marker='x')
+    
+    axs[0].set_title('Backlog Over Time')
+    axs[0].set_xlabel('Weeks')
+    axs[0].set_ylabel('Backlog (units)')
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Plot Stock
+    axs[1].plot(weeks, stock_brew, label="Brewery", color='blue', marker='o')
+    axs[1].plot(weeks, stock_bottl, label="Bottler", color='green', marker='s')
+    axs[1].plot(weeks, stock_wholes, label="Wholesaler", color='orange', marker='^')
+    axs[1].plot(weeks, stock_bar, label="Bar", color='red', marker='x')
+    
+    axs[1].set_title('Stock Over Time')
+    axs[1].set_xlabel('Weeks')
+    axs[1].set_ylabel('Stock (units)')
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # Plot Order
+    axs[2].plot(weeks, order_brew, label="Brewery", color='blue', marker='o')
+    axs[2].plot(weeks, order_bottl, label="Bottler", color='green', marker='s')
+    axs[2].plot(weeks, order_wholes, label="Wholesaler", color='orange', marker='^')
+    axs[2].plot(weeks, order_bar, label="Bar", color='red', marker='x')
+    
+    axs[2].set_title('Orders Over Time')
+    axs[2].set_xlabel('Weeks')
+    axs[2].set_ylabel('Orders (units)')
+    axs[2].legend()
+    axs[2].grid(True)
+
+    # Adjust the layout
+    plt.tight_layout()
+    plt.show()
+
+
+# FUNCTION TO PLOT COSTS PER ACTOR AND ENTIRE SUPPLY CHAIN
+
+def plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar):
+    # Extract week, backlog, and stock columns for each matrix
+    weeks = [row[0] for row in m_brew]
+
+    # Initialize cumulative cost lists for each actor and for the entire supply chain
+    costs_brew = {'stock': [], 'backlog': [], 'total': []}
+    costs_bottl = {'stock': [], 'backlog': [], 'total': []}
+    costs_wholes = {'stock': [], 'backlog': [], 'total': []}
+    costs_bar = {'stock': [], 'backlog': [], 'total': []}
+    
+    total_supply_chain_costs = {'stock': [], 'backlog': [], 'total': []}
+
+    # Helper function to calculate costs
+    def calculate_costs(matrix):
+        stock_costs = []
+        backlog_costs = []
+        total_costs = []
+        cum_stock = cum_backlog = cum_total = 0
+
+        for row in matrix:
+            stock_cost = row[4] * 0.5  # 0.5€ per unit of stock
+            backlog_cost = row[8] * 1  # 1€ per unit of backlog
+            total_cost = stock_cost + backlog_cost
+
+            # Cumulative costs
+            cum_stock += stock_cost
+            cum_backlog += backlog_cost
+            cum_total += total_cost
+
+            stock_costs.append(cum_stock)
+            backlog_costs.append(cum_backlog)
+            total_costs.append(cum_total)
+
+        return stock_costs, backlog_costs, total_costs
+
+    # Calculate costs for each actor
+    costs_brew['stock'], costs_brew['backlog'], costs_brew['total'] = calculate_costs(m_brew)
+    costs_bottl['stock'], costs_bottl['backlog'], costs_bottl['total'] = calculate_costs(m_bottl)
+    costs_wholes['stock'], costs_wholes['backlog'], costs_wholes['total'] = calculate_costs(m_wholes)
+    costs_bar['stock'], costs_bar['backlog'], costs_bar['total'] = calculate_costs(m_bar)
+
+    # Calculate total costs for the entire supply chain
+    for i in range(len(weeks)):
+        total_stock = costs_brew['stock'][i] + costs_bottl['stock'][i] + costs_wholes['stock'][i] + costs_bar['stock'][i]
+        total_backlog = costs_brew['backlog'][i] + costs_bottl['backlog'][i] + costs_wholes['backlog'][i] + costs_bar['backlog'][i]
+        total_total = costs_brew['total'][i] + costs_bottl['total'][i] + costs_wholes['total'][i] + costs_bar['total'][i]
+
+        total_supply_chain_costs['stock'].append(total_stock)
+        total_supply_chain_costs['backlog'].append(total_backlog)
+        total_supply_chain_costs['total'].append(total_total)
+
+    # Plot costs for each actor
+    fig_actor, axs_actor = plt.subplots(4, 1, figsize=(10, 12))
+    actors = ['Brewery', 'Bottler', 'Wholesaler', 'Bar']
+    costs = [costs_brew, costs_bottl, costs_wholes, costs_bar]
+    colors = ['blue', 'green', 'orange', 'red']
+
+    for idx, actor in enumerate(actors):
+        axs_actor[idx].plot(weeks, costs[idx]['stock'], label="Stock Costs", color=colors[idx], linestyle='--')
+        axs_actor[idx].plot(weeks, costs[idx]['backlog'], label="Backlog Costs", color=colors[idx], linestyle=':')
+        axs_actor[idx].plot(weeks, costs[idx]['total'], label="Total Costs", color=colors[idx])
+        axs_actor[idx].set_title(f'{actor} Costs Over Time')
+        axs_actor[idx].set_xlabel('Weeks')
+        axs_actor[idx].set_ylabel('Cumulative Costs (€)')
+        axs_actor[idx].legend()
+        axs_actor[idx].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Plot total costs for the entire supply chain
+    fig_total, ax_total = plt.subplots(figsize=(10, 6))
+
+    ax_total.plot(weeks, total_supply_chain_costs['stock'], label="Stock Costs", color='blue', linestyle='--')
+    ax_total.plot(weeks, total_supply_chain_costs['backlog'], label="Backlog Costs", color='orange', linestyle=':')
+    ax_total.plot(weeks, total_supply_chain_costs['total'], label="Total Costs", color='green')
+
+    ax_total.set_title('Cumulative Costs of the Entire Supply Chain Over Time')
+    ax_total.set_xlabel('Weeks')
+    ax_total.set_ylabel('Cumulative Costs (€)')
+    ax_total.legend()
+    ax_total.grid(True)
+
+    plt.tight_layout()
+    plt.show()

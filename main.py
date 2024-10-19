@@ -17,7 +17,7 @@ import functions as f
 variance = 10
 std_dev = 10
 avg_demand = 10
-sim_time = 30
+sim_time = 101
 cost_stock = 0.5
 cost_blog = 1
 np.random.seed(42)
@@ -28,8 +28,8 @@ s_amt_wip = 4
 s_amt_stock = 12
 
 # speculated inventory variables
-s_cycle_stock = 8
-s_safety_stock = 8
+s_cycle_stock = 10
+s_safety_stock = 15
 
 
 # SIMULATION
@@ -39,7 +39,7 @@ def sim():
     
     # definition of vectors for weekly data of companys
     # (week, order_suppl, amt_transp, amt_wip, amt_stock, 
-    # cycle_stock, safety_stock, order_cust, blog_cust, demand_cust, delivered_cust]
+    # cycle_stock, safety_stock, order_cust, blog_cust, demand_cust, delivered_cust)
     # vector 0 = week
     # vector 1 = order_suppl
     # vector 2 = amt_transp
@@ -47,6 +47,9 @@ def sim():
     v_bottl = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
     v_wholes = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
     v_bar = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 0]
+
+    # variable for additional step order brewery
+    v_brew_prep = 4
 
     # define starting matrix
     m_brew = []
@@ -84,7 +87,7 @@ def sim():
             del_amt = f.calc_delivery(c)
 
             # dispatch order to customer
-            f.move_to_transp(c, v_list, del_amt)
+            v_brew_prep = f.move_to_transp(c, v_list, del_amt, v_brew_prep)
 
         for c in v_list:
             # change order amout from supplier
@@ -99,12 +102,18 @@ def sim():
 
         for c in v_list:
             # pass order_suppl of company previous in line into order_cust of current company
-            f.pass_order(c, v_list)
+            v_brew_prep = f.pass_order(c, v_list, v_brew_prep)
+
     
-    f.print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar)
+    # f.print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar)
+
+    f.plot_backlog_and_stock(m_brew, m_bottl, m_wholes, m_bar)
+
+    f.plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar)
+
     return
         
-
+    
 
 
 #RUN
