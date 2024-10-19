@@ -15,8 +15,8 @@ import functions as f
 
 # sim constants
 variance = 10
-std_dev = np.sqrt(variance)
-avg_demand =10
+std_dev = 10
+avg_demand = 10
 sim_time = 30
 cost_stock = 0.5
 cost_blog = 1
@@ -40,6 +40,9 @@ def sim():
     # definition of vectors for weekly data of companys
     # (week, order_suppl, amt_transp, amt_wip, amt_stock, 
     # cycle_stock, safety_stock, order_cust, blog_cust, demand_cust, delivered_cust]
+    # vector 0 = week
+    # vector 1 = order_suppl
+    # vector 2 = amt_transp
     v_brew = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
     v_bottl = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
     v_wholes = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
@@ -73,17 +76,19 @@ def sim():
             # move products from transport into wip
             f.move_to_wip(c)
 
+        for c in v_list:
             # calculate demand
             f.calc_demand_cust(c)
 
             # calculate delivery amount
-            del_amt = 5 #f.calc_delivery(c)
+            del_amt = f.calc_delivery(c)
 
             # dispatch order to customer
             f.move_to_transp(c, v_list, del_amt)
 
+        for c in v_list:
             # change order amout from supplier
-            f.calc_order_suppl_v1(c)
+            f.calc_order_suppl_v2(c)
 
             # save vector in matrix
             f.save_into_matrix(m_list, c, v_list)
@@ -91,8 +96,6 @@ def sim():
             # change var:week to current
             f.change_week(c, i)
         
-        print(f"Bar: {v_bar}")
-        print(f"WhS: {v_wholes}")
 
         for c in v_list:
             # pass order_suppl of company previous in line into order_cust of current company

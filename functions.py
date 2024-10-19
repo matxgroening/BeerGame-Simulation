@@ -63,17 +63,15 @@ def calc_demand_cust(vector):
 def calc_delivery(vector):
     amt_stock = vector[4]
     demand_cust = vector[9]
+    order_cust = vector[7]
     # if stock bigger or equal to demand
     if amt_stock >= demand_cust:
         # demand is delivered
         delivery_amt = demand_cust
         # stock is reduced by delivery amount
         vector[4] -= delivery_amt
-        # if there is a backlog, it gets reduced by the delivery amount
-        if vector[8] > 0:
-            vector[8] -= delivery_amt
-        else:
-            pass
+        # in this case there will be no backlog
+        vector[8] = 0
     # if stock is lower than demand
     else:
         # delivery amount is all that is in stock
@@ -81,7 +79,7 @@ def calc_delivery(vector):
         # stock empty
         vector[4] = 0 
         # backlog rises by difference of demand to stock
-        vector[8] += demand_cust - delivery_amt
+        vector[8] += (order_cust - delivery_amt)
     return delivery_amt
 
 
@@ -99,8 +97,18 @@ def move_to_transp(vector, v_list, del_amt):
 
 
 # set order amount 
+# v1 order the amount that the customer took
 def calc_order_suppl_v1(vector):
     vector[1] = vector[7]
+
+# v2 order the amount to achieve 20 in stock
+def calc_order_suppl_v2(vector):
+    if vector[4] < 20:
+        vector[1] = 20 - vector[4]
+    else:
+        vector[1] = 0
+
+
 
 # change var:week to current
 def change_week(vector, i):
