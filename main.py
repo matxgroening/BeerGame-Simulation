@@ -17,7 +17,7 @@ import functions as f
 variance = 10
 std_dev = 10
 avg_demand = 10
-sim_time = 101
+sim_time = 31
 cost_stock = 0.5
 cost_blog = 1
 np.random.seed(42)
