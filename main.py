@@ -14,7 +14,6 @@ import functions as f
 # CONSTANTS
 
 # sim constants
-variance = 10
 std_dev = 10
 avg_demand = 10
 sim_time = 31
@@ -29,14 +28,13 @@ s_amt_stock = 12
 
 # speculated inventory variables
 s_cycle_stock = 10
-s_safety_stock = 15
+s_safety_stock = 20
 
 
 # SIMULATION
 
 # start simulation, define starting vector and start weekly cycle
 def sim():
-    
     # definition of vectors for weekly data of companys
     # (week, order_suppl, amt_transp, amt_wip, amt_stock, 
     # cycle_stock, safety_stock, order_cust, blog_cust, demand_cust, delivered_cust)
@@ -68,7 +66,8 @@ def sim():
     for i in range(1, sim_time+1):
         
         # calculation of demand with normal distribution ANS ENDE
-        demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
+        # demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
+        demand_ak = 8 if i > 7 else 4
         v_list[3][7] = demand_ak
 
         # loop for every company
@@ -92,6 +91,7 @@ def sim():
         for c in v_list:
             # change order amout from supplier
             f.calc_order_suppl_v2(c)
+            # f.calc_order_suppl_v3(c, avg_demand, i, sim_time)
 
             # save vector in matrix
             f.save_into_matrix(m_list, c, v_list)

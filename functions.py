@@ -113,6 +113,34 @@ def calc_order_suppl_v2(vector):
         vector[1] = 0
 
 
+def calc_order_suppl_v3(vector, avg_demand, current_week, total_weeks):
+    safety_stock = vector[6]  # safety stock level
+    cycle_stock = vector[7] # cycle stock level
+    amt_stock = vector[4]  # current stock
+    backlog = vector[8]  # current backlog
+
+    # Set how aggressively we react based on the current week (higher at first, lower later)
+    early_reaction_factor = min(1, (total_weeks - current_week) / total_weeks)
+    
+    # Aggressive response at first (cover backlog and average demand), smoothen over time
+    target_stock = safety_stock + cycle_stock  # aim to maintain safety stock
+    
+    if backlog > 0:
+        # Early aggressive ordering: Cover backlog and some extra demand
+        order_amt = backlog + avg_demand * (1 + early_reaction_factor)
+    else:
+        # Smooth ordering: Adjust order amount as time progresses to avoid too much stock
+        order_amt = (target_stock - amt_stock) * (1 + early_reaction_factor)
+
+    # Avoid ordering more than necessary
+    order_amt = max(0, min(order_amt, target_stock - amt_stock))
+
+    vector[1] = order_amt  # Set the order amount to the supplier
+
+    return vector
+
+
+
 # change var:week to current
 def change_week(vector, i):
     vector[0] = i
