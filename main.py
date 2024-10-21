@@ -75,8 +75,8 @@ def sim():
         
         # calculation of demand with normal distribution ANS ENDE
         # demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
-        demand_ak = 8 if i > 7 else 4
-        # demand_ak = 10
+        # demand_ak = 8 if i > 7 else 4
+        demand_ak = 10
         v_list[3][7] = demand_ak
 
         # loop for every company
