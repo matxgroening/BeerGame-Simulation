@@ -105,10 +105,13 @@ def move_to_transp(vector, v_list, del_amt, v_brew_prep):
 def calc_order_suppl_v1(vector):
     vector[1] = vector[7]
 
-# v2 order the amount to achieve 20 in stock
+# v2 order the amount to achieve safety stock
 def calc_order_suppl_v2(vector):
-    if vector[4] < 15:
-        vector[1] = 15 - vector[4]
+    safety_stock = vector[6]  # safety stock level
+    cycle_stock = vector[7] # cycle stock level
+    
+    if vector[4] < safety_stock:
+        vector[1] = safety_stock - vector[4]
     else:
         vector[1] = 0
 
@@ -312,9 +315,9 @@ def plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar):
     colors = ['blue', 'green', 'orange', 'red']
 
     for idx, actor in enumerate(actors):
-        axs_actor[idx].plot(weeks, costs[idx]['stock'], label="Stock Costs", color=colors[idx], linestyle='--')
-        axs_actor[idx].plot(weeks, costs[idx]['backlog'], label="Backlog Costs", color=colors[idx], linestyle=':')
-        axs_actor[idx].plot(weeks, costs[idx]['total'], label="Total Costs", color=colors[idx])
+        axs_actor[idx].plot(weeks, costs[idx]['stock'], label="Stock Costs/Week", color=colors[idx], linestyle='--')
+        axs_actor[idx].plot(weeks, costs[idx]['backlog'], label="Backlog Costs/Week", color=colors[idx], linestyle=':')
+        axs_actor[idx].plot(weeks, costs[idx]['total'], label="Total Costs/Week", color=colors[idx])
         axs_actor[idx].set_title(f'{actor} Costs Over Time')
         axs_actor[idx].set_xlabel('Weeks')
         axs_actor[idx].set_ylabel('Cumulative Costs (€)')
@@ -327,9 +330,9 @@ def plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar):
     # Plot total costs for the entire supply chain
     fig_total, ax_total = plt.subplots(figsize=(10, 6))
 
-    ax_total.plot(weeks, total_supply_chain_costs['stock'], label="Stock Costs", color='blue', linestyle='--')
-    ax_total.plot(weeks, total_supply_chain_costs['backlog'], label="Backlog Costs", color='orange', linestyle=':')
-    ax_total.plot(weeks, total_supply_chain_costs['total'], label="Total Costs", color='green')
+    ax_total.plot(weeks, total_supply_chain_costs['stock'], label="Stock Costs/Week", color='blue', linestyle='--')
+    ax_total.plot(weeks, total_supply_chain_costs['backlog'], label="Backlog Costs/Week", color='orange', linestyle=':')
+    ax_total.plot(weeks, total_supply_chain_costs['total'], label="Total Costs/Week", color='green')
 
     ax_total.set_title('Cumulative Costs of the Entire Supply Chain Over Time')
     ax_total.set_xlabel('Weeks')

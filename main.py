@@ -27,7 +27,7 @@ s_amt_wip = 4
 s_amt_stock = 12
 
 # speculated inventory variables
-s_cycle_stock = 10
+s_cycle_stock = 8
 s_safety_stock = 20
 
 
@@ -68,6 +68,7 @@ def sim():
         # calculation of demand with normal distribution ANS ENDE
         # demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
         demand_ak = 8 if i > 7 else 4
+        # demand_ak = 10
         v_list[3][7] = demand_ak
 
         # loop for every company
@@ -90,6 +91,7 @@ def sim():
 
         for c in v_list:
             # change order amout from supplier
+            # f.calc_order_suppl_v1(c)
             f.calc_order_suppl_v2(c)
             # f.calc_order_suppl_v3(c, avg_demand, i, sim_time)
 
@@ -105,7 +107,7 @@ def sim():
             v_brew_prep = f.pass_order(c, v_list, v_brew_prep)
 
     
-    # f.print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar)
+    f.print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar)
 
     f.plot_backlog_and_stock(m_brew, m_bottl, m_wholes, m_bar)
 
