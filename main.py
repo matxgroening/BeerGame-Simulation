@@ -36,8 +36,7 @@ s_safety_stock = 20
 # start simulation, define starting vector and start weekly cycle
 def sim():
     # definition of vectors for weekly data of companys
-    # (week, order_suppl, amt_transp, amt_wip, amt_stock, 
-    # cycle_stock, safety_stock, order_cust, blog_cust, demand_cust, delivered_cust)
+    # (week, order_suppl, amt_transp, amt_wip, amt_stock, cycle_stock, safety_stock, order_cust, blog_cust, demand_cust, delivered_cust)
     # vector 0 = week
     # vector 1 = order_suppl
     # vector 2 = amt_transp
@@ -49,6 +48,7 @@ def sim():
     # vector 8 = blog_cust
     # vector 9 = demand_cust
     # vector 10 = delivered_cust
+
     v_brew = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
     v_bottl = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]
     v_wholes = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, s_safety_stock, 4, 0, 4, 4]

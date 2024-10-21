@@ -308,6 +308,9 @@ def plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar):
         total_supply_chain_costs['backlog'].append(total_backlog)
         total_supply_chain_costs['total'].append(total_total)
 
+    # print total costs of supply chain
+    print(f"Total Cost of Supply Chain: ", total_total, " €")
+
     # Plot costs for each actor
     fig_actor, axs_actor = plt.subplots(4, 1, figsize=(10, 12))
     actors = ['Brewery', 'Bottler', 'Wholesaler', 'Bar']
