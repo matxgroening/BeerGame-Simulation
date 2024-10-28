@@ -88,18 +88,18 @@ def move_to_transp(vector, v_list, del_amt, v_brew_prep):
     idx = v_list.index(vector)
     # if bar add to delivered_cust
     if idx == 3:
-        vector[10] += del_amt
+        vector[10] = del_amt
     elif idx == 0:
         vector[2] = v_brew_prep
-        vector[10] += del_amt
+        vector[10] = del_amt
         v_list[idx + 1][2] = del_amt
     # else do the same send the amount to amt_transp to next in line
     else:
-        vector[10] += del_amt
+        vector[10] = del_amt
         v_list[idx + 1][2] = del_amt
     return v_brew_prep
 
-
+  
 # set order amount 
 # v1 order the amount that the customer took
 def calc_order_suppl_v1(vector):
@@ -115,33 +115,21 @@ def calc_order_suppl_v2(vector):
     else:
         vector[1] = 0
 
-
-def calc_order_suppl_v3(vector, avg_demand, current_week, total_weeks):
-    safety_stock = vector[6]  # safety stock level
-    cycle_stock = vector[7] # cycle stock level
-    amt_stock = vector[4]  # current stock
-    backlog = vector[8]  # current backlog
-
-    # Set how aggressively we react based on the current week (higher at first, lower later)
-    early_reaction_factor = min(1, (total_weeks - current_week) / total_weeks)
-    
-    # Aggressive response at first (cover backlog and average demand), smoothen over time
-    target_stock = safety_stock + cycle_stock  # aim to maintain safety stock
-    
-    if backlog > 0:
-        # Early aggressive ordering: Cover backlog and some extra demand
-        order_amt = backlog + avg_demand * (1 + early_reaction_factor)
-    else:
-        # Smooth ordering: Adjust order amount as time progresses to avoid too much stock
-        order_amt = (target_stock - amt_stock) * (1 + early_reaction_factor)
-
-    # Avoid ordering more than necessary
-    order_amt = max(0, min(order_amt, target_stock - amt_stock))
-
-    vector[1] = order_amt  # Set the order amount to the supplier
-
+# v3 order @ bar is order of every company
+def calc_order_suppl_v3(vector, v_list, i):
+    order_at_bar = v_list[3][9]
+    vector[1] = order_at_bar
     return vector
 
+# v4 order @ bar is order of every company except if backlog exists
+def calc_order_suppl_v4(vector, v_list, i, sim_time):
+    order_at_bar = v_list[3][9]
+
+    if vector[8] > 0:
+        vector[1] = order_at_bar + (round((1 / 10) * max((vector[6] - vector[4]), 0)))
+    else:
+        vector[1] = order_at_bar
+    return vector
 
 
 # change var:week to current
@@ -152,18 +140,23 @@ def change_week(vector, i):
 
 # KPI FUNCTIONS
 
-# Function to print each matrix as a table
+# Function to print each matrix as a table without 'Cycle_Stock' and 'Safety_Stock' columns
 def print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar):
-    # Define column names for readability
+    # Define column names for readability, excluding 'Cycle_Stock' and 'Safety_Stock'
     columns = ['Week', 'Order_Suppl', 'Amt_Transp', 'Amt_WIP', 'Amt_Stock', 
-               'Cycle_Stock', 'Safety_Stock', 'Order_Cust', 'Backlog_Cust', 
-               'Demand_Cust', 'Delivered_Cust']
+               'Order_Cust', 'Backlog_Cust', 'Demand_Cust', 'Delivered_Cust']
     
-    # Convert each matrix to a DataFrame for pretty printing
-    df_brew = pd.DataFrame(m_brew, columns=columns)
-    df_bottl = pd.DataFrame(m_bottl, columns=columns)
-    df_wholes = pd.DataFrame(m_wholes, columns=columns)
-    df_bar = pd.DataFrame(m_bar, columns=columns)
+    # Manually filter out 'Cycle_Stock' and 'Safety_Stock' from each row (index 5 and 6)
+    m_brew_filtered = [[row[i] for i in [0, 1, 2, 3, 4, 7, 8, 9, 10]] for row in m_brew]
+    m_bottl_filtered = [[row[i] for i in [0, 1, 2, 3, 4, 7, 8, 9, 10]] for row in m_bottl]
+    m_wholes_filtered = [[row[i] for i in [0, 1, 2, 3, 4, 7, 8, 9, 10]] for row in m_wholes]
+    m_bar_filtered = [[row[i] for i in [0, 1, 2, 3, 4, 7, 8, 9, 10]] for row in m_bar]
+    
+    # Convert each filtered matrix to a DataFrame for pretty printing
+    df_brew = pd.DataFrame(m_brew_filtered, columns=columns)
+    df_bottl = pd.DataFrame(m_bottl_filtered, columns=columns)
+    df_wholes = pd.DataFrame(m_wholes_filtered, columns=columns)
+    df_bar = pd.DataFrame(m_bar_filtered, columns=columns)
     
     # Print each DataFrame as a table
     print("\nBrewery Table:")
@@ -179,8 +172,6 @@ def print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar):
     print(df_bar.to_string(index=False))
 
 
-
-
 # Example of how you might call this function after the simulation
 # Assuming m_brew, m_bottl, m_wholes, m_bar have been updated in your simulation
 # Call the function like this:
@@ -189,24 +180,18 @@ def print_matrices_as_tables(m_brew, m_bottl, m_wholes, m_bar):
 
 # FUNCTION TO PLOT BACKLOG AND STOCK
 
-def plot_backlog_and_stock(m_brew, m_bottl, m_wholes, m_bar):
+def plot_combined_backlog_and_stock(m_brew, m_bottl, m_wholes, m_bar):
     # Define the figure and axes
-    fig, axs = plt.subplots(3, 1, figsize=(10, 8))
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8))
 
     # Extract week, backlog, and stock columns for each matrix
     weeks = [row[0] for row in m_brew]
     
-    # Backlogs
-    backlog_brew = [row[8] for row in m_brew]
-    backlog_bottl = [row[8] for row in m_bottl]
-    backlog_wholes = [row[8] for row in m_wholes]
-    backlog_bar = [row[8] for row in m_bar]
-
-    # Stock
-    stock_brew = [row[4] for row in m_brew]
-    stock_bottl = [row[4] for row in m_bottl]
-    stock_wholes = [row[4] for row in m_wholes]
-    stock_bar = [row[4] for row in m_bar]
+    # Kombiniertes Array für Stock und Backlog
+    combined_brew = [row[4] - row[8] for row in m_brew]  # Stock minus Backlog
+    combined_bottl = [row[4] - row[8] for row in m_bottl]
+    combined_wholes = [row[4] - row[8] for row in m_wholes]
+    combined_bar = [row[4] - row[8] for row in m_bar]
 
     # Order of station
     order_brew = [row[1] for row in m_brew]
@@ -214,41 +199,29 @@ def plot_backlog_and_stock(m_brew, m_bottl, m_wholes, m_bar):
     order_wholes = [row[1] for row in m_wholes]
     order_bar = [row[1] for row in m_bar]
 
-    # Plot Backlog
-    axs[0].plot(weeks, backlog_brew, label="Brewery", color='blue', marker='o')
-    axs[0].plot(weeks, backlog_bottl, label="Bottler", color='green', marker='s')
-    axs[0].plot(weeks, backlog_wholes, label="Wholesaler", color='orange', marker='^')
-    axs[0].plot(weeks, backlog_bar, label="Bar", color='red', marker='x')
+    # Plot combined Stock and Backlog
+    axs[0].plot(weeks, combined_brew, label="Brewery Stock-Backlog", color='blue', marker='o')
+    axs[0].plot(weeks, combined_bottl, label="Bottler Stock-Backlog", color='green', marker='s')
+    axs[0].plot(weeks, combined_wholes, label="Wholesaler Stock-Backlog", color='orange', marker='^')
+    axs[0].plot(weeks, combined_bar, label="Bar Stock-Backlog", color='red', marker='x')
     
-    axs[0].set_title('Backlog Over Time')
+    axs[0].set_title('Combined Stock and Backlog Over Time')
     axs[0].set_xlabel('Weeks')
-    axs[0].set_ylabel('Backlog (units)')
+    axs[0].set_ylabel('Net Stock (units)')
     axs[0].legend()
     axs[0].grid(True)
 
-    # Plot Stock
-    axs[1].plot(weeks, stock_brew, label="Brewery", color='blue', marker='o')
-    axs[1].plot(weeks, stock_bottl, label="Bottler", color='green', marker='s')
-    axs[1].plot(weeks, stock_wholes, label="Wholesaler", color='orange', marker='^')
-    axs[1].plot(weeks, stock_bar, label="Bar", color='red', marker='x')
+    # Plot Orders
+    axs[1].plot(weeks, order_brew, label="Brewery Orders", color='blue', marker='o')
+    axs[1].plot(weeks, order_bottl, label="Bottler Orders", color='green', marker='s')
+    axs[1].plot(weeks, order_wholes, label="Wholesaler Orders", color='orange', marker='^')
+    axs[1].plot(weeks, order_bar, label="Bar Orders", color='red', marker='x')
     
-    axs[1].set_title('Stock Over Time')
+    axs[1].set_title('Orders Over Time')
     axs[1].set_xlabel('Weeks')
-    axs[1].set_ylabel('Stock (units)')
+    axs[1].set_ylabel('Orders (units)')
     axs[1].legend()
     axs[1].grid(True)
-
-    # Plot Order
-    axs[2].plot(weeks, order_brew, label="Brewery", color='blue', marker='o')
-    axs[2].plot(weeks, order_bottl, label="Bottler", color='green', marker='s')
-    axs[2].plot(weeks, order_wholes, label="Wholesaler", color='orange', marker='^')
-    axs[2].plot(weeks, order_bar, label="Bar", color='red', marker='x')
-    
-    axs[2].set_title('Orders Over Time')
-    axs[2].set_xlabel('Weeks')
-    axs[2].set_ylabel('Orders (units)')
-    axs[2].legend()
-    axs[2].grid(True)
 
     # Adjust the layout
     plt.tight_layout()
@@ -318,9 +291,9 @@ def plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar):
     colors = ['blue', 'green', 'orange', 'red']
 
     for idx, actor in enumerate(actors):
-        axs_actor[idx].plot(weeks, costs[idx]['stock'], label="Stock Costs/Week", color=colors[idx], linestyle='--')
-        axs_actor[idx].plot(weeks, costs[idx]['backlog'], label="Backlog Costs/Week", color=colors[idx], linestyle=':')
-        axs_actor[idx].plot(weeks, costs[idx]['total'], label="Total Costs/Week", color=colors[idx])
+        axs_actor[idx].plot(weeks, costs[idx]['stock'], label="Stock Costs", color=colors[idx], linestyle='--')
+        axs_actor[idx].plot(weeks, costs[idx]['backlog'], label="Backlog Costs", color=colors[idx], linestyle=':')
+        axs_actor[idx].plot(weeks, costs[idx]['total'], label="Total Costs", color=colors[idx])
         axs_actor[idx].set_title(f'{actor} Costs Over Time')
         axs_actor[idx].set_xlabel('Weeks')
         axs_actor[idx].set_ylabel('Cumulative Costs (€)')
@@ -333,9 +306,9 @@ def plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar):
     # Plot total costs for the entire supply chain
     fig_total, ax_total = plt.subplots(figsize=(10, 6))
 
-    ax_total.plot(weeks, total_supply_chain_costs['stock'], label="Stock Costs/Week", color='blue', linestyle='--')
-    ax_total.plot(weeks, total_supply_chain_costs['backlog'], label="Backlog Costs/Week", color='orange', linestyle=':')
-    ax_total.plot(weeks, total_supply_chain_costs['total'], label="Total Costs/Week", color='green')
+    ax_total.plot(weeks, total_supply_chain_costs['stock'], label="Stock Costs", color='blue', linestyle='--')
+    ax_total.plot(weeks, total_supply_chain_costs['backlog'], label="Backlog Costs", color='orange', linestyle=':')
+    ax_total.plot(weeks, total_supply_chain_costs['total'], label="Total Costs", color='green')
 
     ax_total.set_title('Cumulative Costs of the Entire Supply Chain Over Time')
     ax_total.set_xlabel('Weeks')
@@ -344,4 +317,46 @@ def plot_costs_per_actor_and_supply_chain(m_brew, m_bottl, m_wholes, m_bar):
     ax_total.grid(True)
 
     plt.tight_layout()
+    plt.show()
+
+
+# Funktion zum Berechnen des Servicelevels und zum Plotten
+def plot_service_level(m_brew, m_bottl, m_wholes, m_bar):
+    # Funktion zur Berechnung des Servicelevels für eine Matrix
+    def calculate_service_level(matrix):
+        demand = [row[9] for row in matrix]        # Spalte "demand_cust"
+        delivered = [row[10] for row in matrix]    # Spalte "delivered_cust"
+        
+        service_level = [
+            (delivered[i] / demand[i] * 100) if demand[i] != 0 else 100 
+            for i in range(len(demand))
+        ]
+        return service_level
+
+    # Servicelevel für jede Station berechnen
+    service_level_brew = calculate_service_level(m_brew)
+    service_level_bottl = calculate_service_level(m_bottl)
+    service_level_wholes = calculate_service_level(m_wholes)
+    service_level_bar = calculate_service_level(m_bar)
+
+    # Plot des Servicelevels für jede Station
+    weeks = np.arange(1, len(service_level_brew) + 1)
+
+    plt.figure(figsize=(10, 6))
+
+    # Linien für jede Station
+    plt.plot(weeks, service_level_brew, label='Brewery', marker='o')
+    plt.plot(weeks, service_level_bottl, label='Bottler', marker='x')
+    plt.plot(weeks, service_level_wholes, label='Wholesaler', marker='s')
+    plt.plot(weeks, service_level_bar, label='Bar', marker='d')
+
+    # Zusätzliche Plot-Details
+    plt.axhline(100, color='gray', linestyle='--', label='Ideal Service Level')
+    plt.xlabel('Weeks')
+    plt.ylabel('Service Level (%)')
+    plt.title('Service Level over Time for Each Actor in the Supply Chain')
+    plt.legend()
+    plt.grid(True)
+
+    # Plot anzeigen
     plt.show()
