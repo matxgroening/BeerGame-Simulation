@@ -97,18 +97,34 @@ def sim():
             # dispatch order to customer
             v_brew_prep = f.move_to_transp(c, v_list, del_amt, v_brew_prep)
 
-        for c in v_list:
-            # change order amout from supplier
-            # f.calc_order_suppl_v1(c)
-            f.calc_order_suppl_v2(c)
-            # f.calc_order_suppl_v3(c, avg_demand, i, sim_time)
+        # for c in v_list:
+        #     # change order amout from supplier
+        #     # f.calc_order_suppl_v1(c)
+        #     f.calc_order_suppl_v2(c)
+        #     # f.calc_order_suppl_v3(c, avg_demand, i, sim_time)
+
+        #     # save vector in matrix
+        #     f.save_into_matrix(m_list, c, v_list)
+
+        #     # change var:week to current
+        #     f.change_week(c, i)
+
+        # reversed loop for new order calculation
+        for idx, c in enumerate(reversed(v_list)):
+            # retrieve vectors based on reverse order index
+            vector_bar, vector_wholes, vector_bottl, vector_brew = f.calc_order_suppl_v4(
+                v_list[3],   # Kompletter Vektor für Bar
+                v_list[2],   # Kompletter Vektor für Wholesaler
+                v_list[1],   # Kompletter Vektor für Bottler
+                v_list[0]    # Kompletter Vektor für Brewery
+            )
 
             # save vector in matrix
             f.save_into_matrix(m_list, c, v_list)
 
-            # change var:week to current
+            # update week in current vector
             f.change_week(c, i)
-        
+
 
         for c in v_list:
             # pass order_suppl of company previous in line into order_cust of current company

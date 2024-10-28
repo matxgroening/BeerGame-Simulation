@@ -49,10 +49,10 @@ def move_to_wip(vector):
 # else: moves order_suppl of previous company in line into order_cust of current company
 def pass_order(vector, v_list, v_brew_prep):
     idx = v_list.index(vector)
-    if idx == 0:
-        v_brew_prep = vector[1]
+    if idx == 0:  # Brauerei
+        v_brew_prep = vector[1]  # Bestellung der Brauerei speichern
     else:
-        v_list[idx-1][7] = vector[1]
+        v_list[idx-1][7] = vector[1]  # Bestellung an vorherige Station weitergeben
     return v_brew_prep
 
 
@@ -90,18 +90,17 @@ def calc_delivery(vector):
 def move_to_transp(vector, v_list, del_amt, v_brew_prep):
     idx = v_list.index(vector)
     # if bar add to delivered_cust
-    if idx == 3:
+    if idx == 3:  # Bar
         vector[10] += del_amt
-    elif idx == 0:
-        vector[2] = v_brew_prep
+    elif idx == 0:  # Brauerei
+        vector[2] = v_brew_prep  # Liefermenge aus v_brew_prep übernehmen
         vector[10] += del_amt
-        v_list[idx + 1][2] = del_amt
+        v_list[idx + 1][2] = del_amt  # Liefermenge an Abfüller weitergeben
     # else do the same send the amount to amt_transp to next in line
-    else:
+    else: 
         vector[10] += del_amt
-        v_list[idx + 1][2] = del_amt
+        v_list[idx + 1][2] = del_amt  # Liefermenge an nächste Station weitergeben
     return v_brew_prep
-
 
 # set order amount 
 # v1 order the amount that the customer took
@@ -145,6 +144,37 @@ def calc_order_suppl_v3(vector, avg_demand, current_week, total_weeks):
 
     return vector
 
+def calc_order_suppl_v4(vector_bar, vector_wholes, vector_bottl, vector_brew):
+    # Debugging: Überprüfen Sie die Typen und Inhalte der Eingaben
+    print("Vector Bar:", type(vector_bar), vector_bar)
+    print("Vector Wholesaler:", type(vector_wholes), vector_wholes)
+    print("Vector Bottler:", type(vector_bottl), vector_bottl)
+    print("Vector Brewery:", type(vector_brew), vector_brew)
+
+    # Starte mit dem Bedarf der Bar (korrigiert: Zugriff auf backlog)
+    remaining_order = vector_bar[9]  
+
+    # Durchlaufe die Kette in der Reihenfolge Bar -> Wholesaler -> Bottler -> Brewery
+    for vector in [vector_bar, vector_wholes, vector_bottl, vector_brew]:
+        amt_stock = vector[4]      # Lagerbestand der aktuellen Station
+        backlog = vector[8]        # Backlog der aktuellen Station
+
+        # Berechne die Bestellmenge für die aktuelle Station
+        if remaining_order <= amt_stock:
+            amt_stock -= remaining_order  # Lagerbestand deckt Bestellung
+            remaining_order = 0
+        else:
+            remaining_order -= amt_stock  # Unzureichender Lagerbestand: Backlog entsteht
+            amt_stock = 0
+            backlog = remaining_order    # (korrigiert: Backlog setzen)
+
+        # Setze die Bestellmenge für den Lieferanten der aktuellen Station
+        vector[1] = remaining_order
+        vector[4] = amt_stock  # Aktualisiere Lagerbestand
+        vector[8] = backlog    # Aktualisiere Backlog
+
+    # Gebe nur den Brewery-Vektor zurück
+    return vector_bar, vector_wholes, vector_bottl, vector_brew
 
 
 # change var:week to current
