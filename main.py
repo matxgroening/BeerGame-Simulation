@@ -36,6 +36,9 @@ bottl_safety_stock = int(sl * np.sqrt(6) * 10)
 wholes_safety_stock = int(sl * np.sqrt(4) * 10)
 bar_safety_stock = int(sl * np.sqrt(2) * 10)
 
+# rule change lv3 start stock of bar higher
+s_bar_amt_stock = s_amt_stock # bar_safety_stock
+
 print(brew_safety_stock, bottl_safety_stock, wholes_safety_stock, bar_safety_stock)
 
 
@@ -57,10 +60,11 @@ def sim():
     # vector 9 = demand_cust
     # vector 10 = delivered_cust
 
-    v_brew = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, brew_safety_stock, 4, 0, 4, 4]
-    v_bottl = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, bottl_safety_stock, 4, 0, 4, 4]
-    v_wholes = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, wholes_safety_stock, 4, 0, 4, 4]
-    v_bar = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, bar_safety_stock, 4, 0, 4, 0]
+    v_brew = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, bar_safety_stock, 4, 0, 4, 4]
+    v_bottl = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, bar_safety_stock, 4, 0, 4, 4]
+    v_wholes = [0, 4, s_amt_transp, s_amt_wip, s_amt_stock, s_cycle_stock, bar_safety_stock, 4, 0, 4, 4]
+    # first Bar order at 16
+    v_bar = [0, 4, s_amt_transp, s_amt_wip, s_bar_amt_stock, s_cycle_stock, bar_safety_stock, 4, 0, 4, 0]
 
     # variable for additional step order brewery
     v_brew_prep = 4
@@ -82,8 +86,9 @@ def sim():
     for i in range(1, sim_time+1):
         
         # calculation of demand with normal distribution ANS ENDE
-        demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
+        # demand_ak = int(f.generate_positive_normal(avg_demand, std_dev))
         # demand_ak = 8 if i > 7 else 4
+        demand_ak = 12 if i >= 15 else 8 if i > 7 else 4
         # demand_ak = 10
         v_list[3][7] = demand_ak
 

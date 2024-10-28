@@ -125,8 +125,8 @@ def calc_order_suppl_v3(vector, v_list, i):
 def calc_order_suppl_v4(vector, v_list, i, sim_time):
     order_at_bar = v_list[3][9]
 
-    if vector[8] > 0:
-        vector[1] = order_at_bar + (round((1 / 10) * max((vector[6] - vector[4]), 0)))
+    if vector[6] > vector[4]:
+        vector[1] = order_at_bar + (round((1 / 6) * max((vector[6] - vector[4]), 0)))
     else:
         vector[1] = order_at_bar
     return vector
@@ -353,8 +353,8 @@ def plot_service_level(m_brew, m_bottl, m_wholes, m_bar):
     # Zusätzliche Plot-Details
     plt.axhline(100, color='gray', linestyle='--', label='Ideal Service Level')
     plt.xlabel('Weeks')
-    plt.ylabel('Service Level (%)')
-    plt.title('Service Level over Time for Each Actor in the Supply Chain')
+    plt.ylabel('OTIF (%)')
+    plt.title('OTIF Level over Time for Each Actor in the Supply Chain')
     plt.legend()
     plt.grid(True)
 
